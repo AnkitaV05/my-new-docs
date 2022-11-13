@@ -1,0 +1,183 @@
+<img src="https://cloudblitz.in/wp-content/uploads/2022/04/Untitled_design__26_-removebg-preview.png" alt="cloudblitz logo" />
+
+*********************************************************************
+CSS TEMPLATE HOSTING IN ANSIBLE USING ROLE
+*********************************************************************
+
+Step 1: Create directory mkdir /demo
+
+Step 2: Create file vim css.yml (inside /demo)
+---
+- name: webserver
+  hosts: all
+  become: true
+  roles:
+    - webserver
+
+Step 3: ansible-galaxy init webserver (inside /demo)
+
+Step 4: cp /etc/ansible/* . -r    (inside /demo)
+        vim /etc/ansible/ansible.cfg (changes in conf file)
+        echo "node ip" >> /etc/ansible/hosts (add node in hosts)
+
+Step 5: /demo/webserver/tasks/main.yml
+
+Step 6: vim main.yml (write long script here)
+
+*************correct script***************
+
+---
+- name: install apache
+  ansible.builtin.apt:
+    name: apache2
+    update_cache: yes
+    state: present
+
+- name: host css template
+  ansible.builtin.get_url:
+    url: https://www.free-css.com/assets/files/free-css-templates/download/page285/gymster.zip
+    dest: /var/www/html/
+
+- name: install zip and unzip
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+     - zip
+     - unzip
+
+- name: extract package
+  ansible.builtin.unarchive:
+    src: /var/www/html/gymster.zip
+    dest: /var/www/html/
+    remote_src: yes
+
+- name: copy file
+  ansible.builtin.copy:
+    src: /var/www/html/gym-html-template/
+    dest: /var/www/html/
+    remote_src: yes
+
+- name: start apache
+  ansible.builtin.service:
+    name: apache2
+    state: started
+
+Step 7: /demo
+
+Step 8: ansible-playbook css.yml
+
+
+
+*********************************************************************
+PROXY SERVER
+*********************************************************************
+
+
+Step 1: /demo (can use existing /demo folder)
+
+Step 2: do the entry of another role 'proxy' in css.yml
+        vim css.yml
+        
+---
+- name: webserver
+  hosts: all
+  become: true
+  roles:
+    - webserver
+    - proxy
+	    
+Step 3: ansible-galaxy init proxy (inside /demo)
+
+or simply create a folder 'proxy' then 'task' inside proxy then 'main.yml'
+/demo/proxy/task/main.yml
+
+Paste main script inside this 'main.yml' file
+
+---
+- name: installing pkgs
+  apt:
+    name: apache2
+    state: present
+
+- name: moving proxy file
+  copy:
+    src: /demo/proxyserver/file/proxy.conf
+    dest: /etc/apache2/proxy.conf
+
+- name: moving proxy file
+  copy:
+    src: /demo/proxyserver/file/index.html
+    dest: /var/www/html/index.html
+
+- name: start service
+  service:
+     name: apache2
+     state: started
+
+Step 4: Create 1 more folder 'proxyserver' inside /demo
+        
+        Create 2 files here (/demo/proxyserver/)
+									
+i) vim index.html (write script)
+ 
+<h1>Welcome to Staffcloud</h1>
+<a href=./student> Employee's Registration form </a>
+ 
+ii) vim proxy.conf
+ProxyPass /student http://localhost:8080/
+ProxyPassReverse /student http://localhost:8080/
+
+Step 8: /demo
+        ansible-playbook css.yml
+
+
+
+
+
+
+
+************copied script with some flaws******************
+
+
+ ---
+  - name: install apache
+    ansible.builtin.apt:
+      name: apache2
+      update_cache: yes
+      state: present
+
+ - name: host css template
+   ansible.builtin.get_url:
+     url: "https://www.free-css.com/assets/files/free-css-templates/download/page285/gymster.zip"
+     dest: /var/www/html/
+
+ - name: install zip and unzip
+   apt:
+     name: "{{ item }}"
+     state: present
+     with_items:
+             - zip
+             - unzip
+  - name: extract package
+    ansible.builtin.unarchive:
+     src: "https://www.free-css.com/assets/files/free-css-templates/download/page285/gymster.zip"
+     dest: /var/www/html/
+     remote_src: yes
+ - name: copy file
+   ansible.builtin.copy:
+     src: /var/www/html/gym-html-template/
+     dest: /var/www/html/
+     remote_src: yes
+     #- name: remove
+     # command: rm  -rf /var/www/html/index.html
+
+ - name: start apache
+   ansible.builtin.service:
+     name: apache2
+     state: started
+
+
+
+
+
